@@ -1,4 +1,7 @@
 import time
+import datetime
+
+today= datetime.date.today()
 
 version = raw_input("Enter the version number: ")
 raw_input('Press enter to start.   ')
@@ -12,8 +15,8 @@ h, m = divmod(m, 60)
 timeFormat = "%d:%02d:%02d" % (h, m, s)
 
 
-reconcileFile = r'c:/users/**/desktop/rec_time.txt'
+reconcileFile = r'c:/users/christopher.martin/desktop/rec_time.txt'
 f = open(reconcileFile, 'a')
-output = [version, ' - ', str(timeFormat), ' to reconcile.\n']
+output = [version, ' - ', str(today),' - ',  str(timeFormat), ' to reconcile.\n']
 f.write(''.join(output))
 f.close
