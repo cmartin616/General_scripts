@@ -1,0 +1,138 @@
+################################################################################
+# Name:     Jenk's Natural Breaks as ArcGIS Tool
+#
+# Purpose:  This script is intended to work within the ArcGIS Desktop
+#           environment. Inputs are the workspace, a featureclass/shapefile,
+#           field to apply classification on, and the number of classes. Script
+#           generates a new field called CLASS and populates the field with an
+#           integer class value that the feature should have.
+#
+# Authors:  Benjamin Gosack & Christopher Martin
+#
+# Date:     December 18th, 2013
+################################################################################
+
+# import modules
+import arcpy, numpy
+
+# assign dynamic paramters
+if len(sys.argv) > 1:
+    # assign paramters gathered from the ArcGIS tool interface
+    ws = arcpy.GetParameterAsText(0)                                            # work space
+    features = arcpy.GetParameterAsText(1)                                      # input feature class or shapefile
+    attrib = arcpy.GetParameterAsText(2)                                        # field to classify by
+    numClass = int(arcpy.GetParameterAsText(3))                                 # number of classes output
+    if numClass < 5 or numClass > 9:                                            # checks value of numClass and returns a warning for high or low values.
+        arcpy.AddWarning("This tool works best with 5-9 classes.")
+else:
+    # hard coded parameters for testing/running script outside of ArcGIS
+    ws = r"C:\Users\Chris\Desktop\Fall 2013\GEOG 5562"                          # work space
+    features = r"Test.gdb\building_test"                                        # input feature class or shapefile
+    attrib = "Shape_Leng"                                                       # field to classify by
+    numClass = 5                                                                # number of classes output
+    if numClass < 5 or numClass > 9:                                            # checks value of numClass and returns a warning for high or low values.
+        print "This tool works best with 5-9 classes."
+
+##SR = arcpy.Describe(features).spatialReference get Spatial Ref from featureclass  # descripe spatial reference, if needed.
+
+# Static parameters
+fldName = 'CLASS'
+## symlyr = r"C:\Users\Chris\Desktop\Fall 2013\GEOG 5562\test.lyr"
+arcpy.env.workspace = ws
+
+
+# define function getJenksBreaks() from: http://danieljlewis.org/2010/06/07/jenks-natural-breaks-algorithm-in-python/
+def getJenksBreaks( dataList, numClass ):
+
+    dataList.sort()
+    mat1 = []
+    for i in range(0,len(dataList)+1):
+        temp = []
+        for j in range(0,numClass+1):
+            temp.append(0)
+        mat1.append(temp)
+    mat2 = []
+    for i in range(0,len(dataList)+1):
+        temp = []
+        for j in range(0,numClass+1):
+            temp.append(0)
+        mat2.append(temp)
+    for i in range(1,numClass+1):
+        mat1[1][i] = 1
+        mat2[1][i] = 0
+        for j in range(2,len(dataList)+1):
+            mat2[j][i] = float('inf')
+    v = 0.0
+    for l in range(2,len(dataList)+1):
+        s1 = 0.0
+        s2 = 0.0
+        w = 0.0
+        for m in range(1,l+1):
+            i3 = l - m + 1
+            val = float(dataList[i3-1])
+            s2 += val * val
+            s1 += val
+            w += 1
+            v = s2 - (s1 * s1) / w
+            i4 = i3 - 1
+            if i4 != 0:
+                for j in range(2,numClass+1):
+                    if mat2[l][j] >= (v + mat2[i4][j - 1]):
+                        mat1[l][j] = i3
+                        mat2[l][j] = v + mat2[i4][j - 1]
+        mat1[l][1] = 1
+        mat2[l][1] = v
+    k = len(dataList)
+    kclass = []
+    for i in range(0,numClass+1):
+        kclass.append(0)
+    kclass[numClass] = float(dataList[len(dataList) - 1])
+    countNum = numClass
+    while countNum >= 2:
+        ##print "rank = " + str(mat1[k][countNum])
+        id = int((mat1[k][countNum]) - 2)
+        ##print "val = " + str(dataList[id])
+        kclass[countNum - 1] = dataList[id]
+        k = int((mat1[k][countNum] - 1))
+        countNum -= 1
+    return kclass
+
+# convert featureclass to numpy array and write data out to a list
+arcpy.AddMessage("Reading attributes from " + attrib +'...')
+Test = arcpy.da.FeatureClassToNumPyArray(features, attrib,"", skip_nulls=True)
+data = []
+for x in Test:
+    data.append(x[0])
+
+# run algorithm on input data
+arcpy.AddMessage("Calculating breaks...")
+breaks = getJenksBreaks( data, numClass )
+
+# allow user to visualize the breaks in the interpreter window if the script is executed outside of ArcGIS environment
+if len(sys.argv) <= 1:
+    print breaks
+
+# add the class field to that input shapefile
+arcpy.AddMessage("Adding CLASS field...")
+arcpy.AddField_management(features, fldName, "SHORT")
+
+# generate codeblock dynamically based on the number of classes to input into calculate field function
+arcpy.AddMessage("Populating CLASS field...")
+blockLen = range(numClass)
+codeblock = 'def getClass(attrib):'
+for b in blockLen:
+    if b == 0:
+        codeblock = codeblock + '\n  if attrib < ' + str(breaks[b+1]) + ':\n    return ' + str(b+1)
+    elif b > 0 and b < blockLen[-1]:
+        codeblock = codeblock + '\n  if attrib < ' + str(breaks[b+1]) + ' and attrib >= ' + str(breaks[b]) + ':\n    return ' + str(b+1)
+    elif b == blockLen[-1]:
+        codeblock = codeblock + '\n  else:\n    return ' + str(b+1)
+if len(sys.argv) <= 1:
+    print codeblock
+
+# generate expression to call codeblock based on attribute field defined by user
+expression = 'getClass(float(!' + attrib + '!))'
+
+# execute field calculation
+arcpy.CalculateField_management(features, fldName, expression, 'PYTHON_9.3', codeblock)
+
