@@ -242,7 +242,7 @@ while True:
     running = True
     while version == 'a':
         running = True
-        simple = input_validated('Which of the following processes do you need? \n\n          a) Resize a quarter section\n          b) Create a new half section map (PDF)\n          c) Create a new quarter section map (PDF)\n          d) Restore template files\n          e) Complex Menu (old version, more options)\n          f) Exit the program\n\n        ....  ', lambda x: x in ('a', 'b', 'c', 'd', 'e', 'f', 'exit'))
+        simple = input_validated('Which of the following processes do you need? \n\n          a) Resize a quarter section\n          b) Create a new half section map (PDF)\n          c) Create a new quarter section map (PDF)\n          d) Create other tax maps (N20-29-23 and N22-29-23)\n          e) Restore template files\n          f) Complex Menu (old version, more options)\n          f) Exit the program\n\n        ....  ', lambda x: x in ('a', 'b', 'c', 'd', 'e', 'f', 'exit'))
         if simple.lower() == 'a':
             run = 'resize1'
             break
@@ -253,9 +253,12 @@ while True:
             run = 'quartermap'
             break
         elif simple.lower() == 'd':
-            run = 'restoretemplate'
+            run = 'othermaps'
             break
         elif simple.lower() == 'e':
+            run = 'restoretemplate'
+            break
+        elif simple.lower() == 'f':
             version = 'b'
             break
         else:
@@ -357,6 +360,14 @@ while True:
         elif run == 'halfmap':
             print 'Opening the PDF.\n'
             os.startfile(os.path.normpath('\\\\isvfs4\\rr\\shared\\valuation\\mapping\\HalfSectionMapsProduction\\templates\\template_half.pdf'))
+        elif run == 'othermaps':
+            option = input_validated('Select an option below:\n\n     a) N20-29-23\n     b) N22-29-23\n        ....  ', lambda x: x in ('a', 'b', ))
+            if option in ['a', 'A']:
+                print 'Opening the PDF.\n'
+                os.startfile(os.path.normpath('\\\\isvfs4\\rr\\shared\\valuation\\mapping\\HalfSectionMapsProduction\\templates\\template_half_quarter_N202923.pdf'))
+            elif option in ['b', 'B']:
+                print 'Opening the PDF.\n'
+                os.startfile(os.path.normpath('\\\\isvfs4\\rr\\shared\\valuation\\mapping\\HalfSectionMapsProduction\\templates\\template_half_quarter_N222923.pdf'))
         elif run == 'split1':
             file1 = raw_input('\nInput file name: ')
             dir1 = os.path.join(inputDir, str(file1) + '.pdf')
