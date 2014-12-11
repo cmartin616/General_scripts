@@ -223,7 +223,7 @@ function create222923(myDocObj) {
             nHorizAlign: 5, 
             nVertAlign: 3, //top align
             nHorizValue: pt2inch * -7.5, //72 per inch
-            nVertValue: pt2inch * -1.75,
+            nVertValue: pt2inch * -3.25,
             bOnTop: false
         });
         ready = app.alert({
