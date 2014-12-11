@@ -242,7 +242,7 @@ while True:
     running = True
     while version == 'a':
         running = True
-        simple = input_validated('Which of the following processes do you need? \n\n          a) Resize a quarter section\n          b) Create a new half section map (PDF)\n          c) Create a new quarter section map (PDF)\n          d) Create other tax maps (N20-29-23 and N22-29-23)\n          e) Restore template files\n          f) Complex Menu (old version, more options)\n          f) Exit the program\n\n        ....  ', lambda x: x in ('a', 'b', 'c', 'd', 'e', 'f', 'exit'))
+        simple = input_validated('Which of the following processes do you need? \n\n          a) Resize a quarter section\n          b) Create a new half section map (PDF)\n          c) Create a new quarter section map (PDF)\n          d) Create other tax maps (N20-29-23 and N22-29-23)\n          e) Restore template files\n          f) Complex Menu (old version, more options)\n          g) Exit the program\n\n        ....  ', lambda x: x in ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'exit'))
         if simple.lower() == 'a':
             run = 'resize1'
             break
